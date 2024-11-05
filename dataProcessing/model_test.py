@@ -6,7 +6,7 @@ from tensorflow.keras.utils import Sequence
 from sklearn.metrics import confusion_matrix, classification_report
 
 class SEMGDataGenerator(Sequence):
-    def __init__(self, hdf5_file, segments, batch_size=32, shuffle=False):
+    def __init__(self, hdf5_file, segments, batch_size=16, shuffle=False):
         self.hdf5_file = hdf5_file
         self.segments = segments  # List of segment names for the test set
         self.batch_size = batch_size
@@ -46,7 +46,7 @@ class SEMGDataGenerator(Sequence):
                     coeffs = segment[muscle]['coeffs_normalized'][:]
                     stacked_tensor.append(coeffs)
                 
-                stacked_tensor = np.stack(stacked_tensor, axis=0)  # Stack along the new axis (muscles)
+                stacked_tensor = np.stack(stacked_tensor, axis=-1)  # Stack along the new axis (muscles)
                 X.append(stacked_tensor)
                 
                 # Automatically assign label based on the segment name (0 for Young, 1 for Old)
@@ -77,7 +77,7 @@ def extract_subject_info(segment_name):
 
 # Load data and trained model
 hdf5_file = 'D:/sEMG_data/CWT_EMG_data_normalized.h5'
-model = tf.keras.models.load_model('C:/Users/alexl/Desktop/dataProcessing/results_subjectDataSplit/final_model.h5')
+model = tf.keras.models.load_model('c:/Users/alexl/Desktop/SENSE/dataProcessing/results_featEng/final_model.h5')
 
 # Load all segment names from the file
 with h5py.File(hdf5_file, 'r') as f:
@@ -110,7 +110,7 @@ test_subjects = test_young_subjects + test_old_subjects
 test_segments = [segment_name for subject_id in test_subjects for segment_name in subject_dict[subject_id]['segments']]
 
 # Create test data generators
-test_data_generator = SEMGDataGenerator(hdf5_file, test_segments, batch_size=32, shuffle=False)
+test_data_generator = SEMGDataGenerator(hdf5_file, test_segments, batch_size=16, shuffle=False)
 
 # Evaluate the model on the test set
 test_loss, test_accuracy = model.evaluate(test_data_generator)
